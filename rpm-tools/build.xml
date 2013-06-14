@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rpm-tools" default="rpm" basedir="." xmlns:redline='antlib:org.redline_rpm'>
+
+	<property name="src" value="src" />
+
+	<property name="target" value="target" />
+	
+	<property name="build" value="${target}/build" />
+
+	<property name="build.class" value="${build}/classes" />
+
+	<property name="lib" value="lib" />
+	<property name="jar.file" value="${target}/monitor-commons.jar" />
+
+	<!--java环境变量 -->
+	<path id="compile.classpath">
+		<fileset dir="${lib}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<!--删除classes-->
+	<target name="clean" description="删除">
+		<delete dir="${build.class}" />
+	</target>
+
+	<!--创建classes目录-->
+	<target name="init" description="创建目录" depends="clean">
+		<mkdir dir="${build.class}" />
+	</target>
+
+	<!--编译java源文件-->
+	<target name="compile" description="编译文件" depends="init">
+		<javac target="1.6" source="1.6" srcdir="${src}" destdir="${build.class}"> 
+			<compilerarg line="-encoding GBK "/>
+			<classpath refid="compile.classpath" />
+		</javac>
+	</target>
+
+	<!--生成jar文件 -->
+	<target name="jar" description="数据库操作包" depends="compile">
+		<jar jarfile="${basedir}/${jar.file}">
+			<fileset dir="${build.class}" />
+		</jar>
+		<copy overwrite="true" todir="../MonitorWeb/WebContent/WEB-INF/lib" file="${basedir}/${jar.file}" />
+		<copy overwrite="true" todir="../MonitorServer/lib" file="${basedir}/${jar.file}" /> 
+		<copy overwrite="true" todir="../MonitorCalculate/lib" file="${basedir}/${jar.file}" /> 
+		<delete dir="${target}" />
+	</target>
+	
+	<target name='rpm'>
+		<mkdir dir='rpms'/>
+        <redline:rpm group='Java Development' preinstallscript="ssh.sh" name='test' version='1.2.3' destination='rpms'>
+        	<rpmfileset prefix='/software/tlm/lib' file='lib/redline-1.1.9.jar' username="cshu" group="cshu" />
+        	<rpmfileset prefix='/software/tlm/lib' file='lib/ant.jar' username="cshu" group="cshu" />
+        	<tarfileset prefix="/software/tlm/src" file="src/**" filemode="644" username="cshu" group="cshu"/>
+          	<link path='/usr/share/java/redline.jar' target='/software/tlm/lib/redline-1.1.9.jar'/>
+        </redline:rpm>
+	</target>
+
+</project>
